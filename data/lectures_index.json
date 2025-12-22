@@ -1,0 +1,22 @@
+{
+    "j1-k01": {
+        "title": "The Book of Knowledge",
+        "lectures": [
+            {
+                "title": "Session 1 (Course View)",
+                "url": "https://cambridgemuslimcollege.teachable.com/courses/768221/lectures/13925079",
+                "id": "1"
+            }
+        ]
+    },
+    "j3-k04": {
+        "title": "The Book of Breaking the Two Desires",
+        "lectures": [
+            {
+                "title": "Breaking the Desire of Eating: Part 1",
+                "url": "https://www.youtube.com/watch?v=...",
+                "id": "eating-1"
+            }
+        ]
+    }
+}
