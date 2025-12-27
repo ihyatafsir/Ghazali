@@ -74,7 +74,7 @@ export function BilingualReader({ bookId, lines, translations }: BilingualReader
                                     <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-full animate-pulse" />
                                     <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-5/6 animate-pulse" />
                                     <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-4/6 animate-pulse" />
-                                    <p className="text-xs text-slate-400 italic">Translation coming soon (Book 1 Completed)</p>
+                                    <p className="text-xs text-slate-400 italic">Translation unavailable for this section</p>
                                 </div>
                             )}
                         </div>
