@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, X, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, X, Loader2, BookOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function DictionaryOverlay() {
     const [isOpen, setIsOpen] = useState(false);
@@ -18,11 +19,10 @@ export function DictionaryOverlay() {
         if (!search || search.length < 2) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/dictionary?word=${encodeURIComponent(search)}`);
+            const res = await fetch(`/api/dictionary?word=${encodeURIComponent(search.trim())}`);
             const data = await res.json();
-            setDefinition(data.definition || "Definition not found.");
+            setDefinition(data.definition || "Definition not found in Lisan al-Arab.");
         } catch (err) {
-            console.error("Failed to lookup word", err);
             setDefinition("Error connecting to dictionary.");
         } finally {
             setLoading(false);
@@ -30,18 +30,6 @@ export function DictionaryOverlay() {
     };
 
     useEffect(() => {
-        const handleSelection = () => {
-            const selection = window.getSelection();
-            const text = selection?.toString().trim();
-            if (text && text.length > 1 && text.split(' ').length < 3) {
-                // Only trigger if text contains Arabic characters
-                if (/[\u0600-\u06FF]/.test(text) && isOpen) {
-                    setTerm(text);
-                    lookup(text);
-                }
-            }
-        };
-
         const handleLookupEvent = (e: any) => {
             if (e.detail) {
                 setTerm(e.detail);
@@ -49,69 +37,90 @@ export function DictionaryOverlay() {
                 setIsOpen(true);
             }
         };
-
-        document.addEventListener('mouseup', handleSelection);
         window.addEventListener('lookup-word', handleLookupEvent);
-        return () => {
-            document.removeEventListener('mouseup', handleSelection);
-            window.removeEventListener('lookup-word', handleLookupEvent);
-        };
-    }, [isOpen]);
-
-    const toggle = () => setIsOpen(!isOpen);
+        return () => window.removeEventListener('lookup-word', handleLookupEvent);
+    }, []);
 
     if (!mounted) return null;
 
     return (
         <>
             <button
-                onClick={toggle}
-                className={`fixed bottom-6 right-6 p-4 rounded-full shadow-2xl transition-all z-50 ${isOpen ? 'bg-red-500 text-white rotate-90' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-110 shadow-emerald-500/20'}`}
+                onClick={() => setIsOpen(!isOpen)}
+                className={`fixed bottom-8 right-8 w-14 h-14 rounded-2xl shadow-2xl transition-all duration-500 z-50 flex items-center justify-center ${isOpen ? 'bg-slate-900 text-white rotate-90 scale-90' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-110 shadow-emerald-500/30'}`}
             >
                 {isOpen ? <X className="w-6 h-6" /> : <Search className="w-6 h-6" />}
             </button>
 
-            {isOpen && (
-                <div className="fixed bottom-24 right-6 w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden flex flex-col max-h-[60vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="p-4 bg-emerald-600 text-white flex justify-between items-center shadow-lg">
-                        <div className="flex items-center gap-2">
-                            <Search className="w-4 h-4" />
-                            <h3 className="font-bold tracking-tight">Lisan al-Arab</h3>
-                        </div>
-                        <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">CLASSIC ARABIC</span>
-                    </div>
-
-                    <div className="p-5 flex-1 overflow-y-auto custom-scrollbar">
-                        <div className="relative mb-6">
-                            <input
-                                type="text"
-                                value={term}
-                                onChange={(e) => setTerm(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && lookup(term)}
-                                placeholder="Search term..."
-                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-emerald-500 font-arabic text-xl text-right transition-all outline-none"
-                                dir="rtl"
-                            />
-                            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
-                            {loading && <Loader2 className="w-5 h-5 text-emerald-500 absolute right-3 top-3.5 animate-spin" />}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="fixed bottom-28 right-8 w-[400px] glass rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden flex flex-col max-h-[70vh]"
+                    >
+                        <div className="p-5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                                    <BookOpen className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-sm tracking-tight">Lisan al-Arab</h3>
+                                    <p className="text-[10px] opacity-80 font-medium uppercase tracking-widest">Classical Lexicon</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="font-arabic text-right text-slate-700 dark:text-slate-300 leading-relaxed text-lg whitespace-pre-line" dir="rtl">
-                            {definition ? (
-                                <div className="animate-in fade-in duration-500">
-                                    <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent mb-4" />
-                                    {definition}
+                        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                            <div className="relative mb-8">
+                                <input
+                                    type="text"
+                                    value={term}
+                                    onChange={(e) => setTerm(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && lookup(term)}
+                                    placeholder="Search Arabic root..."
+                                    className="w-full pl-5 pr-12 py-4 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 border-2 border-transparent focus:border-emerald-500/30 focus:bg-white dark:focus:bg-slate-800 font-arabic text-2xl text-right transition-all outline-none"
+                                    dir="rtl"
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                    {loading ? (
+                                        <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+                                    ) : (
+                                        <Search className="w-5 h-5 text-slate-400" onClick={() => lookup(term)} />
+                                    )}
                                 </div>
-                            ) : (
-                                <div className="text-center py-10">
-                                    <p className="text-slate-400 text-sm font-sans mb-2">Select a word in the text or type above</p>
-                                    <div className="text-4xl opacity-20">📖</div>
-                                </div>
-                            )}
+                            </div>
+
+                            <div className="font-arabic text-right text-slate-800 dark:text-slate-200 leading-[2] text-xl whitespace-pre-line bg-white/40 dark:bg-slate-900/40 p-5 rounded-2xl border border-white/20 dark:border-slate-800/20" dir="rtl">
+                                {definition ? (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="space-y-4"
+                                    >
+                                        <div className="text-sm font-sans font-bold text-emerald-600 dark:text-emerald-500 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                            <div className="h-px flex-1 bg-emerald-100 dark:bg-emerald-900/30" />
+                                            Definition
+                                            <div className="h-px flex-1 bg-emerald-100 dark:bg-emerald-900/30" />
+                                        </div>
+                                        {definition}
+                                    </motion.div>
+                                ) : (
+                                    <div className="text-center py-16 space-y-4">
+                                        <p className="text-slate-400 text-sm font-sans">Click on any word in the text to see its classical meaning.</p>
+                                        <div className="text-6xl grayscale opacity-20">📜</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </div>
-            )}
+
+                        <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-800/50 text-center">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Integrated Knowledge Base</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

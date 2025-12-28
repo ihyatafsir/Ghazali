@@ -19,13 +19,9 @@ export default function TafsirPage() {
             fetch('/quran-en.json').then(res => res.json())
         ]).then(([indexData, enData]) => {
             setQuranIndex(indexData);
-
-            // Index existing English data
             const enIndex: { [key: string]: string } = {};
             if (enData.quran) {
-                enData.quran.forEach((v: any) => {
-                    enIndex[`${v.chapter}:${v.verse}`] = v.text;
-                });
+                enData.quran.forEach((v: any) => { enIndex[`${v.chapter}:${v.verse}`] = v.text; });
             }
             setEnglishQuran(enIndex);
             setLoading(false);
@@ -38,45 +34,12 @@ export default function TafsirPage() {
         );
     };
 
-    // Group by Surah
     const suras: { [name: string]: any[] } = {};
     Object.entries(quranIndex).forEach(([key, matches]) => {
         const [surahName, verseNum] = key.split(':');
         if (!suras[surahName]) suras[surahName] = [];
         suras[surahName].push({ key, verseNum, matches, surahName });
     });
-
-    const SURAH_MAP: { [key: string]: string } = {
-        "fatiha": "الفاتحة", "baqarah": "البقرة", "imran": "آل عمران", "nisa": "النساء",
-        "maidah": "المائدة", "anam": "الأنعام", "araf": "الأعراف", "anfal": "الأنفال",
-        "taubah": "التوبة", "yunus": "يونس", "hud": "هود", "yusuf": "يوسف",
-        "rad": "الرعد", "ibrahim": "إبراهيم", "hijr": "الحجر", "nahl": "النحل",
-        "isra": "الإسراء", "kahf": "الكهف", "maryam": "مريم", "taha": "طه",
-        "anbiya": "الأنبياء", "hajj": "الحج", "muminun": "المؤمنون", "nur": "النور",
-        "furqan": "الفرقان", "shuara": "الشعراء", "naml": "النمل", "qasas": "القصص",
-        "ankabut": "العنكبوت", "rum": "الروم", "luqman": "لقمان", "sajdah": "السجدة",
-        "ahzab": "الأحزاب", "saba": "سبأ", "fatir": "فاطر", "yasin": "يس",
-        "saffat": "الصافات", "sad": "ص", "zumar": "الزمر", "ghafir": "غافر",
-        "fussilat": "فصلت", "shura": "الشورى", "zukhruf": "الزخرف", "dukhan": "الدخان",
-        "jathiyah": "الجاثية", "ahqaf": "الأحقاف", "muhammad": "محمد", "fath": "الفتح",
-        "hujurat": "الحجرات", "qaf": "ق", "dhariyat": "الذاريات", "tur": "الطور",
-        "najm": "النجم", "qamar": "القمر", "rahman": "الرحمن", "waqiah": "الواقعة",
-        "hadid": "الحديد", "mujadilah": "المجادلة", "hashr": "الحشر", "mumtahanah": "الممتحنة",
-        "saff": "الصف", "jumuah": "الجمعة", "munafiqun": "المنافقون", "taghabun": "التغابن",
-        "talaq": "الطلاق", "tahrim": "التحريم", "mulk": "الملك", "qalam": "القلم",
-        "haqqah": "الحاقة", "maarij": "المعارج", "nuh": "نوح", "jinn": "الجن",
-        "muzammil": "المزمل", "muddathir": "المدثر", "qiyamah": "القيامة", "insan": "الإنسان",
-        "mursalat": "المرسلات", "naba": "النبأ", "naziat": "النازعات", "abasa": "عبس",
-        "takwir": "التكوير", "infitar": "الانفطار", "mutaffifin": "المطففين", "inshiqaq": "الانشقاق",
-        "buruj": "البروج", "tariq": "الطارق", "ala": "الأعلى", "ghashiyah": "الغاشية",
-        "fajr": "الفجر", "balad": "البلد", "shams": "الشمس", "layl": "الليل",
-        "duha": "الضحى", "sharh": "الشرح", "tin": "التين", "alaq": "العلق",
-        "qadr": "القدر", "bayyinah": "البينة", "zalzalah": "الزلزلة", "adiyat": "العاديات",
-        "qariah": "القارعة", "takathur": "التكاثر", "asr": "العصر", "humazah": "الهمزة",
-        "fil": "الفيل", "quraish": "قريش", "maun": "الماعون", "kawthar": "الكوثر",
-        "kafirun": "الكافرون", "nasr": "النصر", "masad": "المسد", "ikhlas": "الإخلاص",
-        "falaq": "الفلق", "nas": "الناس"
-    };
 
     const ARABIC_TO_ID: { [key: string]: number } = {
         "الفاتحة": 1, "البقرة": 2, "آل عمران": 3, "النساء": 4, "المائدة": 5,
@@ -108,63 +71,68 @@ export default function TafsirPage() {
     const filteredSurahs = surahKeys.filter(s => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
-
-        // English match
-        const enMatch = Object.entries(SURAH_MAP).some(([en, ar]) =>
-            en.includes(q) && s.includes(ar)
-        );
-
-        return s.includes(q) || enMatch ||
-            suras[s].some(v => v.matches.some((m: any) => m.snippet.includes(searchQuery)));
+        return s.includes(q) || suras[s].some(v => v.matches.some((m: any) => m.snippet.includes(searchQuery)));
     });
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full" />
+                <p className="text-slate-400 font-bold uppercase tracking-[0.2em]">Indexing Tafsir...</p>
             </div>
         );
     }
 
     return (
-        <div className="max-w-6xl mx-auto py-12 px-6">
-            <div className="mb-12 text-center">
-                <h1 className="text-4xl font-serif font-bold text-slate-900 dark:text-white mb-4">
-                    Ihya 'Ulum al-Din as Tafsir
+        <div className="max-w-7xl mx-auto py-16 px-6 lg:px-12 animate-fade-in">
+            {/* Header */}
+            <header className="mb-20 text-center space-y-6">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-800 text-xs font-bold uppercase tracking-widest">
+                    <BookOpen size={14} />
+                    Quranic Cross-Reference
+                </div>
+                <h1 className="text-5xl md:text-6xl font-serif font-bold text-slate-900 dark:text-white leading-tight">
+                    Ihya 'Ulum al-Din <span className="text-emerald-600 dark:text-emerald-500">as Tafsir</span>
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-                    Explore Al-Ghazali's commentary on the Quran, organized by Surah and Ayah.
-                    This interface transforms the Ihya into a thematic Tafsir.
+                <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                    A unique transformation of Al-Ghazali's work, reorganized by Quranic citation.
+                    Instantly find every instance where the Imam explains a specific Ayah.
                 </p>
-            </div>
 
-            <div className="relative mb-10 max-w-md mx-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                    type="text"
-                    placeholder="Search Surah or Verse text..."
-                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
+                <div className="relative max-w-xl mx-auto pt-8">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <input
+                        type="text"
+                        placeholder="Search by Surah name or Ayah content..."
+                        className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-3xl shadow-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all outline-none text-lg"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </header>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-6">
                 {filteredSurahs.map((surah) => (
-                    <div key={surah} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <motion.div
+                        key={surah}
+                        layout
+                        className="glass relative rounded-[2rem] overflow-hidden transition-all duration-300 border border-white/40 dark:border-slate-800/40 shadow-xl"
+                    >
                         <button
                             onClick={() => toggleSurah(surah)}
-                            className="w-full flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                            className={`w-full flex items-center justify-between p-8 transition-all ${expandedSurahs.includes(surah) ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/50'}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold">
+                            <div className="flex items-center gap-6">
+                                <span className={`w-12 h-12 flex items-center justify-center rounded-2xl font-bold text-lg ${expandedSurahs.includes(surah) ? 'bg-white/20' : 'bg-emerald-600 text-white'}`}>
                                     {suras[surah].length}
-                                </div>
-                                <span className="text-xl font-arabic font-bold text-slate-800 dark:text-slate-200">
+                                </span>
+                                <span className={`text-4xl font-arabic font-bold ${expandedSurahs.includes(surah) ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                                     {surah}
                                 </span>
                             </div>
-                            {expandedSurahs.includes(surah) ? <ChevronDown /> : <ChevronRight />}
+                            <div className={`p-2 rounded-full ${expandedSurahs.includes(surah) ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                {expandedSurahs.includes(surah) ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+                            </div>
                         </button>
 
                         <AnimatePresence>
@@ -173,56 +141,54 @@ export default function TafsirPage() {
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="border-t border-slate-100 dark:border-slate-700"
+                                    className="bg-white/40 dark:bg-slate-900/40 p-8 pt-4"
                                 >
-                                    <div className="p-5 grid grid-cols-1 gap-6">
+                                    <div className="grid grid-cols-1 gap-12">
                                         {suras[surah].map((verse: any) => {
                                             const surahId = ARABIC_TO_ID[surah];
                                             const enText = surahId ? englishQuran[`${surahId}:${verse.verseNum}`] : null;
 
                                             return (
-                                                <div key={verse.key} className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
-                                                    <div className="flex justify-between items-center mb-4">
-                                                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                                                            Ayah {verse.verseNum}
-                                                        </span>
-                                                        <Link
-                                                            href={`/search?q=${verse.key}`}
-                                                            className="text-xs flex items-center gap-1 text-slate-400 hover:text-emerald-500 transition-colors"
-                                                        >
-                                                            Cross-reference <ExternalLink size={12} />
-                                                        </Link>
+                                                <div key={verse.key} className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                    <div className="flex items-center gap-4 text-emerald-600 dark:text-emerald-400">
+                                                        <span className="text-sm font-bold uppercase tracking-widest px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">Ayah {verse.verseNum}</span>
+                                                        <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/30 to-transparent" />
                                                     </div>
 
-                                                    <p className="font-arabic text-2xl text-right text-slate-800 dark:text-slate-200 mb-4 leading-relaxed" dir="rtl">
-                                                        {verse.matches[0].snippet}
-                                                    </p>
-
-                                                    {enText && (
-                                                        <p className="text-slate-600 dark:text-slate-400 mb-6 italic leading-relaxed border-l-2 border-emerald-500 pl-4">
-                                                            "{enText}"
+                                                    <div className="space-y-6">
+                                                        <p className="font-arabic text-4xl text-right text-slate-900 dark:text-white leading-[1.8]" dir="rtl">
+                                                            {verse.matches[0].snippet}
                                                         </p>
-                                                    )}
+                                                        {enText && (
+                                                            <p className="text-xl text-slate-600 dark:text-slate-300 font-sans italic border-l-4 border-emerald-500 pl-6 py-2">
+                                                                "{enText}"
+                                                            </p>
+                                                        )}
+                                                    </div>
 
-                                                    <div className="space-y-4">
-                                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Ghazali's Commentary (Ihya Context)</h4>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                                                         {verse.matches.map((match: any, i: number) => (
-                                                            <div key={i} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
-                                                                <p className="text-slate-600 dark:text-slate-400 text-sm italic mb-3 line-clamp-3 leading-relaxed">
-                                                                    "... {match.context} ..."
-                                                                </p>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded uppercase">
-                                                                        {match.book}
-                                                                    </span>
-                                                                    <Link
-                                                                        href={`/books/${match.book}#line-${match.location.line_index}`}
-                                                                        className="text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-1 hover:underline"
-                                                                    >
-                                                                        Read Section <BookOpen size={12} />
-                                                                    </Link>
+                                                            <Link
+                                                                key={i}
+                                                                href={`/books/${match.book}#line-${match.location.line_index}`}
+                                                                className="group p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between"
+                                                            >
+                                                                <div>
+                                                                    <div className="flex justify-between items-center mb-4">
+                                                                        <span className="text-[10px] font-bold text-emerald-600 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 rounded uppercase tracking-tighter">
+                                                                            {match.book}
+                                                                        </span>
+                                                                        <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                                                    </div>
+                                                                    <p className="text-slate-500 dark:text-slate-400 text-sm italic leading-relaxed line-clamp-2 transition-all">
+                                                                        "{match.context.slice(0, 100)}..."
+                                                                    </p>
                                                                 </div>
-                                                            </div>
+                                                                <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between text-[10px] font-bold text-slate-400">
+                                                                    <span>LINE {match.location.line_index + 1}</span>
+                                                                    <span className="text-emerald-600 group-hover:underline">CONTINUE READING</span>
+                                                                </div>
+                                                            </Link>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -232,7 +198,7 @@ export default function TafsirPage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
         </div>
